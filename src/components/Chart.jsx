@@ -31,13 +31,20 @@ export let DoughnutChart = ({ StatusData = [] }) => {
       {
         label: 'Calls',
         data: StatusData,
-        borderColor: ['rgb(62,12,171)', 'rgb(214,43,129)'],
-        backgroundColor: ['rgba(62,12,171,0.3)', 'rgba(214,43,129,0.3)'],
+        borderColor: [
+          'rgb(62,12,171)',
+          'rgb(214,43,129)',
+          'rgba(0,123,92,171)',
+        ],
+        backgroundColor: [
+          'rgba(62,12,171,0.3)',
+          'rgba(214,43,129,0.3)',
+          'rgba(0,123,92,0.3)',
+        ],
         borderWidth: 1,
       },
     ],
   };
-  console.log(data);
   return <Doughnut data={data} />;
 };
 
@@ -72,20 +79,19 @@ export let PieChart = ({ StatusData = [] }) => {
         label: 'Calls',
         data: StatusData,
         borderColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
+          'rgb(62,12,171)',
+          'rgb(214,43,129)',
+          'rgba(0,123,92,171)',
         ],
         backgroundColor: [
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(0, 128, 128, 0.8)',
-          'rgba(255, 140, 0, 0.8)',
+          'rgba(62,12,171,0.3)',
+          'rgba(214,43,129,0.3)',
+          'rgba(0,123,92,0.3)',
         ],
         borderWidth: 1,
       },
     ],
   };
-  console.log(data);
   return <Pie data={data} />;
 };
 
@@ -97,7 +103,7 @@ export const LineChart = ({ dataArray = [], startDate, endDate, months }) => {
         position: 'bottom',
       },
       title: {
-        display: true,
+        display: false,
         text: 'Calls per day',
       },
     },
@@ -132,7 +138,7 @@ export const BarChart = ({ dataArray = [], startDate, endDate, months }) => {
         position: 'top',
       },
       title: {
-        display: true,
+        display: false,
         text: 'Minutes per day',
       },
     },
@@ -151,7 +157,7 @@ export const BarChart = ({ dataArray = [], startDate, endDate, months }) => {
       {
         label: 'Minutes',
         data: dataArray,
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        backgroundColor: 'rgba(107, 70, 193, 0.8)',
       },
     ],
   };

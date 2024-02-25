@@ -1,19 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Inbox, File, Send, ArchiveX, Trash2, Archive } from 'lucide-react';
-import { ResponsiveContainer } from 'recharts';
-import { Label as ShadLabel } from '@/components/ui/label';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { format } from 'date-fns';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-} from './ui/dropdown-menu';
-import { Input } from './ui/input';
-import { getCallEntries } from '@/Redux/actions/stats';
+import { getCallEntries } from '../Redux/actions/stats';
 import { BarChart, DoughnutChart, LineChart, PieChart } from './Chart';
-import { ColorModeSwitcher } from '../ColorModeSwitcher';
+import { IoIosMenu } from 'react-icons/io';
+
 const Dashboard = () => {
   const months = [
     'Jan',
@@ -29,6 +19,7 @@ const Dashboard = () => {
     'Nov',
     'Dec',
   ];
+
   const [startDate, setStartDate] = useState(
     new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
   );
@@ -46,21 +37,24 @@ const Dashboard = () => {
   );
   campaignIds.unshift('None');
   const dispatch = useDispatch();
-  const CampaignHandler = (e) => {
-    if (e.target.innerText == 'None') {
+
+  const CampaignHandler = (id) => {
+    if (id === 'None') {
       setCampaignId('');
     } else {
-      setCampaignId(e.target.innerText);
+      setCampaignId(id);
     }
   };
+
   const handleChangeStartDate = (e) => {
     setStartDate(e.target.value);
   };
+
   const handleChangeEndDate = (e) => {
     setEndDate(e.target.value);
   };
+
   const change = ({ startDate, endDate }) => {
-    // Calculate the difference in milliseconds
     let temp = [];
     let diff = new Date(endDate) - new Date(startDate);
     diff = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -71,9 +65,10 @@ const Dashboard = () => {
       day.setHours(0, 0, 0, 0);
       let minutes = 0;
       callEntry.forEach((entry) => {
-        let checkDate = new Date(entry.createdAt);
-        checkDate.setHours(0, 0, 0, 0);
-        if (checkDate.toString() == day.toString()) {
+        let normaldate = entry.createdAt.split('T')[0];
+        normaldate = new Date(normaldate);
+        normaldate.setHours(0, 0, 0, 0);
+        if (normaldate.toString() === day.toString()) {
           minutes += entry.duration;
         }
       });
@@ -87,7 +82,7 @@ const Dashboard = () => {
     for (let i = 0; i < categories.length; i++) {
       let calls = 0;
       callEntry.forEach((entry) => {
-        if (entry.category == categories[i]) {
+        if (entry.category === categories[i]) {
           calls += 1;
         }
       });
@@ -101,7 +96,7 @@ const Dashboard = () => {
     for (let i = 0; i < status.length; i++) {
       let calls = 0;
       callEntry.forEach((entry) => {
-        if (entry.status == status[i]) {
+        if (entry.status === status[i]) {
           calls += 1;
         }
       });
@@ -116,72 +111,168 @@ const Dashboard = () => {
         new Date(startDate).getTime() + i * 24 * 60 * 60 * 1000
       );
       day.setHours(0, 0, 0, 0);
-      let calls = 0;
+      var calls = 0;
       callEntry.forEach((entry) => {
-        let checkDate = new Date(entry.createdAt);
-        checkDate.setHours(0, 0, 0, 0);
-        if (checkDate.toString() == day.toString()) {
+        let normaldate = entry.createdAt.split('T')[0];
+        normaldate = new Date(normaldate);
+        normaldate.setHours(0, 0, 0, 0);
+        if (normaldate.toString() === day.toString()) {
           calls += 1;
         }
       });
       day = months[day.getMonth()] + ' ' + day.getDate();
       temp.push({ day, calls });
-      setTotalCallsPerDay(temp);
     }
+    setTotalCallsPerDay(temp);
   };
+
   const { callEntry } = useSelector((state) => state.callEntry);
+
   useEffect(() => {
     dispatch(getCallEntries({ campaignId, startDate, endDate }));
   }, [dispatch, campaignId, startDate, endDate]);
 
   useEffect(() => {
     change({ campaignId, startDate, endDate });
-    totalMinutesPerDay;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callEntry]);
+
+  const [isOpen, setIsOpen] = useState(false);
+  const sidebarRef = useRef(null);
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const closeSidebar = (e) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', closeSidebar);
+    return () => {
+      document.removeEventListener('mousedown', closeSidebar);
+    };
+  }, [closeSidebar]);
+
+  const handleSidebarClose = () => {
+    setIsOpen(false);
+  };
+
+  const DropdownMenu = ({ children }) => {
+    const [isOpenDrawer, setIsOpenDrawer] = useState(false);
+
+    const toggleMenu = () => {
+      setIsOpenDrawer(!isOpenDrawer);
+    };
+
+    return (
+      <div className='relative inline-block text-left'>
+        <DropdownMenuTrigger onClick={toggleMenu} isOpenDrawer={isOpenDrawer}>
+          Campaign Id
+        </DropdownMenuTrigger>
+        {isOpenDrawer && <DropdownMenuContent>{children}</DropdownMenuContent>}
+      </div>
+    );
+  };
+
+  const DropdownMenuTrigger = ({ children, onClick, isOpenDrawer }) => {
+    return (
+      <button
+        className={`bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded ${
+          isOpenDrawer ? 'bg-purple-700' : ''
+        }`}
+        onClick={onClick}
+      >
+        {children}
+      </button>
+    );
+  };
+
+  const DropdownMenuContent = ({ children }) => {
+    return (
+      <div className='absolute z-10 w-48 py-2 mt-2 bg-white border border-gray-300 rounded shadow-lg'>
+        {children}
+      </div>
+    );
+  };
+
+  const DropdownMenuItem = ({ children, onClick }) => {
+    return (
+      <button
+        className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left'
+        onClick={onClick}
+      >
+        {children}
+      </button>
+    );
+  };
 
   return (
     <>
-      <div
-        className='flex flex-row justify-between'
-        style={{
-          boxSizing: 'border-box',
-          paddingTop: '12px',
-          marginTop: '10px',
-          paddingLeft: '16px',
-          paddingRight: '16px',
-        }}
-      >
-        <div className='group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2 relative'>
-          <ColorModeSwitcher />
-          <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger>Campaign Id</DropdownMenuTrigger>
-              <DropdownMenuContent
-                className={'flex flex-col flex-wrap overflow-auto'}
-              >
-                {campaignIds.map((id) => (
-                  <DropdownMenuItem key={id} onClick={CampaignHandler}>
+      <div className='flex flex-row'>
+        <div className='relative'>
+          {!isOpen && (
+            <button
+              onClick={toggleSidebar}
+              className='text-3xl m-2 rounded-lg border-2'
+            >
+              <IoIosMenu />
+            </button>
+          )}
+          {isOpen && (
+            <button
+              onClick={handleSidebarClose}
+              className='text-3xl m-2 rounded-lg border-2'
+            >
+              <IoIosMenu />
+            </button>
+          )}
+
+          {/* Sidebar */}
+          {isOpen && (
+            <div
+              ref={sidebarRef}
+              className='min-w-48 p-8 border-r-2 border-t-2 sticky left-0 top-0 h-screen bg-white'
+            >
+              <DropdownMenu>
+                {campaignIds.map((id, index) => (
+                  <DropdownMenuItem
+                    key={index}
+                    onClick={() => CampaignHandler(id)}
+                  >
                     {id}
                   </DropdownMenuItem>
                 ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div>
-            <ShadLabel htmlFor='email'>From</ShadLabel>
-            <Input type={'date'} onChange={handleChangeStartDate} />
-            <ShadLabel htmlFor='email'>To</ShadLabel>
-            <Input type={'date'} onChange={handleChangeEndDate} />
-          </div>
+              </DropdownMenu>
+              <div className='mt-10'>
+                <label className='block text-gray-700 font-bold mb-2'>
+                  From
+                </label>
+                <input
+                  type='date'
+                  onChange={handleChangeStartDate}
+                  className='border border-gray-300 rounded px-2 py-1'
+                />
+                <label className='block text-gray-700 font-bold mb-2'>To</label>
+                <input
+                  type='date'
+                  onChange={handleChangeEndDate}
+                  className='border border-gray-300 rounded px-2 py-1'
+                />
+              </div>
+            </div>
+          )}
         </div>
-        <div className='relative'>
-          <ResponsiveContainer width='100%' height={350}>
-            <div className='flex flex-row '>
-              <div
-                className='m-0 sm:m-12 rounded-lg p-0 sm:p-8 mt-4 sm:mt-16 shadow object-contain'
-                style={{ boxShadow: '-1px 0px 10px rgba(107, 70, 193, 0.5)' }}
-              >
-                <h2 className='text-center text-md mb-4'>Minutes Per Day</h2>
+        <div className='flex flex-col w-full mr-80'>
+          <div className='flex flex-col md:flex-row p-4 md:p-8 w-full'>
+            <div className='p-4 md:p-8 pb-16 mx-2 md:w-3/5 border flex flex-col border-gray-300 rounded-lg bg-white shadow-lg'>
+              <h2 className='text-xl text-gray-800 font-bold mb-4'>
+                Minutes Per Day
+              </h2>
+              <div className='w-full h-80 md:h-96'>
                 <BarChart
                   dataArray={totalMinutesPerDay.map((item) => item.minutes)}
                   startDate={startDate}
@@ -189,32 +280,17 @@ const Dashboard = () => {
                   months={months}
                 />
               </div>
-              <div
-                className='m-0 sm:m-12 rounded-lg p-0 sm:p-8 mt-4 sm:mt-16 shadow'
-                style={{ boxShadow: '-1px 0px 10px rgba(107, 70, 193, 0.5)' }}
-              >
-                <h2 className='text-center text-md mb-4'>Status</h2>
-                <DoughnutChart
-                  StatusData={totalCallsPerStatus.map((item) => item.calls)}
-                />
-              </div>
-              <div
-                className='m-0 sm:m-12 rounded-lg p-0 sm:p-8 mt-4 sm:mt-16 shadow'
-                style={{ boxShadow: '-1px 0px 10px rgba(107, 70, 193, 0.5)' }}
-              >
-                <h2 className='text-center text-md mb-4'>Category</h2>
-                <PieChart
-                  StatusData={totalCallsPerCategory.map((item) => item.calls)}
-                />
-              </div>
             </div>
-            <div
-              className='m-0 sm:m-12 rounded-lg p-0 sm:p-8 mt-4 sm:mt-16 shadow w-1/2'
-              style={{ boxShadow: '-1px 0px 10px rgba(107, 70, 193, 0.5)' }}
-            >
-              <h2 className='text-center sm:text-left text-md pt-8 sm:pt-0 ml-0 sm:ml-16'>
-                Calls Graph
-              </h2>
+            <div className='p-4 md:p-8 mx-2 md:w-2/5 border border-gray-300 rounded-lg bg-white shadow-lg'>
+              <h2 className='text-xl font-bold mb-4'>Status</h2>
+              <DoughnutChart
+                StatusData={totalCallsPerStatus.map((item) => item.calls)}
+              />
+            </div>
+          </div>
+          <div className='flex flex-col md:flex-row p-4 md:p-8 w-full'>
+            <div className='p-4 md:p-8 mx-2 md:w-2/3 border border-gray-300 rounded-lg bg-white shadow-lg'>
+              <h2 className='text-xl font-bold mb-4'>Calls Graph</h2>
               <LineChart
                 dataArray={totalCallsPerDay.map((item) => item.calls)}
                 startDate={startDate}
@@ -222,7 +298,13 @@ const Dashboard = () => {
                 months={months}
               />
             </div>
-          </ResponsiveContainer>
+            <div className='p-4 md:p-8 mx-2 md:w-1/3 border border-gray-300 rounded-lg bg-white shadow-lg'>
+              <h2 className='text-xl font-bold mb-4'>Category</h2>
+              <PieChart
+                StatusData={totalCallsPerCategory.map((item) => item.calls)}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </>
