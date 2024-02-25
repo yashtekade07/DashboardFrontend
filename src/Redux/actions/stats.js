@@ -6,7 +6,7 @@ export const getCallEntries =
     try {
       dispatch({ type: 'getCallEntryRequest' });
       const { data } = await axios.get(
-        `https://dashboardbackend-dq4m.onrender.com/callentries?campaignId=${
+        `https://dashboardbackend-dq4m.onrender.com/api/callentries?campaignId=${
           campaignId || ''
         }&startDate=${startDate || ''}&endDate=${endDate || ''}`
       );
