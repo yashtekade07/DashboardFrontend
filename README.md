@@ -8,6 +8,10 @@ This is the frontend for a dashboard application built with React.js. It provide
 
 - Node.js installed on your local machine
 
+### Deployment :
+
+https://dashboard-frontend-indol.vercel.app/
+
 ### Installation
 
 1. Clone the repository: git clone https://github.com/yashtekade07/DashboardFrontend.git
