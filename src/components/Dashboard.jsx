@@ -1,5 +1,4 @@
 import React from 'react';
-import { Nav } from './Nav';
 import { Inbox, File, Send, ArchiveX, Trash2, Archive } from 'lucide-react';
 import {
   Bar,
@@ -14,48 +13,57 @@ import {
   Tooltip,
   Legend,
   Line,
+  Label,
 } from 'recharts';
-import { useSelector } from 'react-redux';
+import { Label as ShadLabel } from '@/components/ui/label';
+import { useDispatch, useSelector } from 'react-redux';
 import { format } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from './ui/dropdown-menu';
+import { Input } from './ui/input';
+import { getCallEntries } from '@/Redux/actions/stats';
 
 const Dashboard = () => {
-  let { stats, message, error, loading } = useSelector((state) => state.stat);
-  stats = stats.map((item) => ({
-    ...item,
-    createdAt: format(new Date(item.createdAt), 'dd/MM'), // Format to dd/MM (day and month)
-  }));
-  const categoryData = stats.reduce((acc, curr) => {
-    curr.category.forEach((cat) => {
-      const existingCat = acc.find((item) => item.name === cat.name);
-      if (existingCat) {
-        existingCat.calls += cat.calls;
-        existingCat.minutes += cat.minutes;
-      } else {
-        acc.push({ name: cat.name, calls: cat.calls });
-      }
-    });
-    return acc;
-  }, []);
-
-  const statusData = stats.reduce((acc, curr) => {
-    curr.status.forEach((stat) => {
-      const existingStat = acc.find((item) => item.name === stat.name);
-      if (existingStat) {
-        existingStat.calls += stat.calls;
-        existingStat.minutes += stat.minutes;
-      } else {
-        acc.push({ name: stat.name, calls: stat.calls });
-      }
-    });
-    return acc;
-  }, []);
-
+  const campaignIds = Array.from(
+    { length: 20 },
+    (_, index) => `campaign_${index + 1}`
+  );
+  const dispatch = useDispatch();
+  const { callEntry } = useSelector((state) => state.callEntry);
+  const CampaignHandler = (e) => {
+    dispatch(getCallEntries({ campaignId: e.target.innerText }));
+  };
   return (
     <>
       <div className='flex flex-row justify-between'>
-        <Nav />
+        <div className='group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2'>
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger>Campaign Id</DropdownMenuTrigger>
+              <DropdownMenuContent
+                className={'flex flex-col flex-wrap overflow-auto'}
+              >
+                {campaignIds.map((id) => (
+                  <DropdownMenuItem key={id} onClick={CampaignHandler}>
+                    {id}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div>
+            <ShadLabel htmlFor='email'>From</ShadLabel>
+            <Input type={'date'} />
+            <ShadLabel htmlFor='email'>To</ShadLabel>
+            <Input type={'date'} />
+          </div>
+        </div>
         <ResponsiveContainer width='100%' height={350}>
-          <BarChart data={stats}>
+          <BarChart data={callEntry}>
             <XAxis
               dataKey={`createdAt`}
               stroke='#888888'
